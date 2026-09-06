@@ -1,0 +1,6 @@
+@EV_PRAC_2_HostAddress = http://localhost:5208
+
+GET {{EV_PRAC_2_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
