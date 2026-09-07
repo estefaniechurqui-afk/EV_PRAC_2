@@ -16,6 +16,8 @@ public class ProductoRequest
     [Required, StringLength(80)]
     public string Categoria { get; set; } = string.Empty;
 
+    public int? CategoriaId { get; set; }
+
     [Url]
     public string? Imagen { get; set; }
 

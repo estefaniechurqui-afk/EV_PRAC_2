@@ -8,6 +8,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Venta> Ventas => Set<Venta>();
     public DbSet<Usuario> Usuarios => Set<Usuario>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +25,15 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany(producto => producto.Ventas)
             .HasForeignKey(venta => venta.ProductoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Producto>()
+            .HasOne(producto => producto.CategoriaRelacionada)
+            .WithMany(categoria => categoria.Productos)
+            .HasForeignKey(producto => producto.CategoriaId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Categoria>()
+            .HasIndex(categoria => categoria.Nombre)
+            .IsUnique();
     }
 }

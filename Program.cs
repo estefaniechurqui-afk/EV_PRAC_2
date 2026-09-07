@@ -80,6 +80,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+    await CategoriaSeeder.SeedAsync(db);
     await AuthSeeder.SeedAsync(
         db,
         scope.ServiceProvider.GetRequiredService<IPasswordHasher<Usuario>>());

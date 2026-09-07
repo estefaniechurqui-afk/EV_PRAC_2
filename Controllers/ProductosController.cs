@@ -16,6 +16,7 @@ public class ProductosController(AppDbContext db) : ControllerBase
     {
         var productos = await db.Productos
             .AsNoTracking()
+            .Include(producto => producto.CategoriaRelacionada)
             .Select(producto => ToResponse(producto))
             .ToListAsync();
 
@@ -27,6 +28,7 @@ public class ProductosController(AppDbContext db) : ControllerBase
     {
         var producto = await db.Productos
             .AsNoTracking()
+            .Include(producto => producto.CategoriaRelacionada)
             .Where(producto => producto.Id == id)
             .Select(producto => ToResponse(producto))
             .SingleOrDefaultAsync();
@@ -39,7 +41,10 @@ public class ProductosController(AppDbContext db) : ControllerBase
     public async Task<ActionResult<ProductoResponse>> Create(ProductoRequest request)
     {
         var producto = new Producto();
-        UpdateEntity(producto, request);
+        if (!await UpdateEntityAsync(producto, request))
+        {
+            return BadRequest("La categoría indicada no existe.");
+        }
 
         db.Productos.Add(producto);
         await db.SaveChangesAsync();
@@ -57,7 +62,10 @@ public class ProductosController(AppDbContext db) : ControllerBase
             return NotFound();
         }
 
-        UpdateEntity(producto, request);
+        if (!await UpdateEntityAsync(producto, request))
+        {
+            return BadRequest("La categoría indicada no existe.");
+        }
         await db.SaveChangesAsync();
 
         return NoContent();
@@ -84,14 +92,29 @@ public class ProductosController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    private static void UpdateEntity(Producto producto, ProductoRequest request)
+    private async Task<bool> UpdateEntityAsync(Producto producto, ProductoRequest request)
     {
         producto.Nombre = request.Nombre.Trim();
         producto.Descripcion = request.Descripcion.Trim();
         producto.Precio = request.Precio;
         producto.Categoria = request.Categoria.Trim();
+        producto.CategoriaId = request.CategoriaId;
         producto.Imagen = request.Imagen;
         producto.Disponible = request.Disponible;
+
+        if (request.CategoriaId is null)
+        {
+            return true;
+        }
+
+        var categoria = await db.Categorias.FindAsync(request.CategoriaId);
+        if (categoria is null)
+        {
+            return false;
+        }
+
+        producto.Categoria = categoria.Nombre;
+        return true;
     }
 
     private static ProductoResponse ToResponse(Producto producto) => new(
@@ -99,7 +122,8 @@ public class ProductosController(AppDbContext db) : ControllerBase
         producto.Nombre,
         producto.Descripcion,
         producto.Precio,
-        producto.Categoria,
+        producto.CategoriaRelacionada?.Nombre ?? producto.Categoria,
+        producto.CategoriaId,
         producto.Imagen,
         producto.Disponible);
 }

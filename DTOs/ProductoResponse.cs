@@ -6,5 +6,6 @@ public record ProductoResponse(
     string Descripcion,
     decimal Precio,
     string Categoria,
+    int? CategoriaId,
     string? Imagen,
     bool Disponible);
